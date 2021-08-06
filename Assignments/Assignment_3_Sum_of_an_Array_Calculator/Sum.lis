@@ -1,0 +1,117 @@
+     1                                  
+     2                                  ;Program name: "Sum of an Array".  This program demonstrates the input of multiple float numbers from the standard input device
+     3                                  ;using a single instruction and the output of multiple float numbers to the standard output device also using a single 
+     4                                  ;instruction.  Copyright (C) 2019 Marius Iacob.
+     5                                  ; 
+     6                                  ;==================================================================================================================================
+     7                                  ;This file is part of the software program "Sum of an Array".                                                                 
+     8                                  ;Sum of an Array is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+     9                                  ;version 3 as published by the Free Software Foundation.                                                                    
+    10                                  ;Sum of an Array is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied         
+    11                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.     
+    12                                  ;A copy of the GNU General Public License v3 is available here:  <https:;www.gnu.org/licenses/>.
+    13                                  ; 
+    14                                  ;==================================================================================================================================
+    15                                  ;Author information
+    16                                  ;   Author name: Marius Iacob
+    17                                  ;   Author email: mariusiacob@csu.fullerton.edu
+    18                                  ; 
+    19                                  ;==================================================================================================================================
+    20                                  ;Program information
+    21                                  ;   Program name: Sum of an Array
+    22                                  ;   Programming languages: One modules in C++, C, and one module in X86
+    23                                  ;   Date program began: 2021-Mar-12
+    24                                  ;   Date of last update: 2021-Mar-21
+    25                                  ;   Date of reorganization of comments: 2021-Mar-21
+    26                                  ;   Files in this program: Control.asm, Fill.asm, Sum.asm, Display.cpp, Main.c, and Script.sh
+    27                                  ;   Status: Finished.  The program was tested extensively with no errors in Ubuntu 20.04
+    28                                  ; 
+    29                                  ;==================================================================================================================================
+    30                                  ;Purpose
+    31                                  ;   Show how to input, output, and calculating floating point (64-bit) numbers.
+    32                                  ;   This file (Sum.asm) will sum up all the elements in the array and return the 
+    33                                  ;   final sum to the control
+    34                                  ; 
+    35                                  ;==================================================================================================================================
+    36                                  ;This file
+    37                                  ;   File name: Sum.asm
+    38                                  ;   Language: X86 with Intel syntax.
+    39                                  ;   Max page width: 132 columns
+    40                                  ;   Assemble: nasm -f elf64 -l Sum.lis -o Sum.o Sum.asm
+    41                                  ; 
+    42                                  ;==================================================================================================================================
+    43                                  
+    44                                  ;=======================================Begin Code=================================================
+    45                                  extern printf
+    46                                  extern scanf
+    47                                  
+    48                                  global _sum
+    49                                  
+    50                                  segment .data
+    51                                  segment .bss 
+    52                                  segment .text   
+    53                                  
+    54                                  _sum:
+    55                                  
+    56                                  ; Back up all registers to stack and set stack pointer to base pointer
+    57 00000000 55                      push rbp
+    58 00000001 4889E5                  mov rbp, rsp
+    59 00000004 57                      push rdi
+    60 00000005 56                      push rsi
+    61 00000006 52                      push rdx
+    62 00000007 51                      push rcx
+    63 00000008 4150                    push r8
+    64 0000000A 4151                    push r9
+    65 0000000C 4152                    push r10
+    66 0000000E 4153                    push r11
+    67 00000010 4154                    push r12
+    68 00000012 4155                    push r13
+    69 00000014 4156                    push r14
+    70 00000016 4157                    push r15
+    71 00000018 53                      push rbx
+    72 00000019 9C                      pushf
+    73                                  
+    74 0000001A 6AFF                    push qword -1                           ; Extra push onto stack to make even # of pushes.
+    75                                  
+    76 0000001C 4989FF                  mov r15, rdi                            ; Copies array that was passed to r15.
+    77 0000001F 4989F6                  mov r14, rsi                            ; Copies number of elements in the array to r14.
+    78 00000022 41BD00000000            mov r13, 0                              ; Sum register to add elements of array to.
+    79 00000028 F24D0F2AFD              cvtsi2sd xmm15, r13
+    80 0000002D 41BC00000000            mov r12, 0                              ; Counter to to iterate through array.
+    81                                  
+    82                                  ;=======================================START LOOP=================================================
+    83                                  startLoop:
+    84                                  
+    85                                  ; Compares the counter (r12) to the number of elements in the array (r14).
+    86 00000033 4D39F4                  cmp r12, r14                        
+    87 00000036 7D0B                    jge outofloop
+    88                                  
+    89                                  ;=======================================COPY INTO ARRAY============================================
+    90                                  ; Adds element of array at index of r12 to the Sum of register r13.
+    91 00000038 F2470F583CE7            addsd xmm15, [r15 + 8 * r12]            
+    92 0000003E 49FFC4                  inc r12                                 ; Increments counter r12 by 1.
+    93                                  
+    94                                  ; Restarts loop
+    95 00000041 EBF0                    jmp startLoop
+    96                                  
+    97                                  ;=======================================END OF LOOP================================================
+    98                                  outofloop:
+    99                                  ; Restores all backed up registers to their original state.
+   100 00000043 58                      pop rax                                 ;Remove extra push of -1 from stack.
+   101 00000044 F2410F10C7              movsd xmm0, xmm15                       ;Copies sum (r13) to rax.
+   102 00000049 9D                      popf                                                       
+   103 0000004A 5B                      pop rbx                                                     
+   104 0000004B 415F                    pop r15                                                     
+   105 0000004D 415E                    pop r14                                                      
+   106 0000004F 415D                    pop r13                                                      
+   107 00000051 415C                    pop r12                                                      
+   108 00000053 415B                    pop r11                                                     
+   109 00000055 415A                    pop r10                                                     
+   110 00000057 4159                    pop r9                                                      
+   111 00000059 4158                    pop r8                                                      
+   112 0000005B 59                      pop rcx                                                     
+   113 0000005C 5A                      pop rdx                                                     
+   114 0000005D 5E                      pop rsi                                                     
+   115 0000005E 5F                      pop rdi                                                     
+   116 0000005F 5D                      pop rbp
+   117 00000060 C3                      ret

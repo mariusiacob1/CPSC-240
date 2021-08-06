@@ -1,0 +1,181 @@
+     1                                  
+     2                                  ;Program name: "Sum of an Array".  This program demonstrates the input of multiple float numbers from the standard input device
+     3                                  ;using a single instruction and the output of multiple float numbers to the standard output device also using a single 
+     4                                  ;instruction.  Copyright (C) 2019 Marius Iacob.
+     5                                  ;
+     6                                  ;==================================================================================================================================
+     7                                  ;This file is part of the software program "Sum of an Array".                                                                 
+     8                                  ;Sum of an Array is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+     9                                  ;version 3 as published by the Free Software Foundation.                                                                    
+    10                                  ;Sum of an Array is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied         
+    11                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.     
+    12                                  ;A copy of the GNU General Public License v3 is available here:  <https:;www.gnu.org/licenses/>.
+    13                                  ;
+    14                                  ;==================================================================================================================================
+    15                                  ;Author information
+    16                                  ;   Author name: Marius Iacob
+    17                                  ;   Author email: mariusiacob@csu.fullerton.edu
+    18                                  ;
+    19                                  ;==================================================================================================================================
+    20                                  ;Program information
+    21                                  ;   Program name: Sum of an Array
+    22                                  ;   Programming languages: One modules in C++, C, and one module in X86
+    23                                  ;   Date program began: 2021-Mar-12
+    24                                  ;   Date of last update: 2021-Mar-21
+    25                                  ;   Date of reorganization of comments: 2021-Mar-21
+    26                                  ;   Files in this program: Control.asm, Fill.asm, Sum.asm, Display.cpp, Main.c, and Script.sh
+    27                                  ;   Status: Finished.  The program was tested extensively with no errors in Ubuntu 20.04
+    28                                  ;
+    29                                  ;==================================================================================================================================
+    30                                  ;Purpose
+    31                                  ;   Show how to input, output, and calculating floating point (64-bit) numbers.
+    32                                  ;   This file (Fill.asm) will fill up the array from the user and will send the
+    33                                  ;   the total number of elements that were inputted from the user back to control.
+    34                                  ;
+    35                                  ;==================================================================================================================================
+    36                                  ;This file
+    37                                  ;   File name: Fill.asm
+    38                                  ;   Language: X86 with Intel syntax.
+    39                                  ;   Max page width: 132 columns
+    40                                  ;   Assemble: nasm -f elf64 -l Fill.lis -o Fill.o Fill.asm
+    41                                  ;
+    42                                  ;==================================================================================================================================
+    43                                  
+    44                                  ;======================================== Begin Code ========================================
+    45                                  extern printf
+    46                                  extern scanf
+    47                                  extern atof
+    48                                  
+    49                                  arraySize equ 100
+    50                                  
+    51                                  global _fill
+    52                                  
+    53                                  segment .data
+    54                                      ;Inputs
+    55 00000000 5768656E2066696E69-         numbersInput db "When finished, press enter followed by cntl+D.",10,0
+    55 00000009 736865642C20707265-
+    55 00000012 737320656E74657220-
+    55 0000001B 666F6C6C6F77656420-
+    55 00000024 627920636E746C2B44-
+    55 0000002D 2E0A00             
+    56                                  
+    57                                      ;Outputs
+    58 00000030 506C6561736520656E-         floatOutput db "Please enter floating point number separated by ws.",10,0
+    58 00000039 74657220666C6F6174-
+    58 00000042 696E6720706F696E74-
+    58 0000004B 206E756D6265722073-
+    58 00000054 657061726174656420-
+    58 0000005D 62792077732E0A00   
+    59                                      
+    60                                      ;Formats
+    61 00000065 257300                      stringFormat db "%s", 0
+    62                                  
+    63                                  segment .bss
+    64 00000000 <res 00000320>              myArray: resq 100
+    65                                  
+    66                                  segment .text   ;Reserved for executing instructions.
+    67                                  
+    68                                  _fill:
+    69                                  
+    70                                  ; Back up all registers and set stack pointer to base pointer
+    71 00000000 55                      push rbp
+    72 00000001 4889E5                  mov rbp, rsp
+    73 00000004 57                      push rdi
+    74 00000005 56                      push rsi
+    75 00000006 52                      push rdx
+    76 00000007 51                      push rcx
+    77 00000008 4150                    push r8
+    78 0000000A 4151                    push r9
+    79 0000000C 4152                    push r10
+    80 0000000E 4153                    push r11
+    81 00000010 4154                    push r12
+    82 00000012 4155                    push r13
+    83 00000014 4156                    push r14
+    84 00000016 4157                    push r15
+    85 00000018 53                      push rbx
+    86                                  
+    87                                  ;=======================================BEGIN CODE=================================================
+    88 00000019 6AFF                    push qword -1                           ;Extra push to create even number of pushes
+    89                                  
+    90                                  ;=======================================INITIALIZE PARAMETERS======================================
+    91 0000001B 4989FF                  mov qword r15, rdi                      ;Address of array saved to r15.
+    92 0000001E 4989F6                  mov qword r14, rsi                      ;Max number of elements allowed in array.
+    93 00000021 41BD00000000            mov qword r13, 0                        ;Set counter to 0 elements in Array.
+    94                                  
+    95                                  ;Display floatOutput
+    96 00000027 48BF-                   mov qword rdi, stringFormat                     
+    96 00000029 [6500000000000000] 
+    97 00000031 48BE-                   mov qword rsi, floatOutput              
+    97 00000033 [3000000000000000] 
+    98 0000003B B800000000              mov qword rax, 0
+    99 00000040 E8(00000000)            call printf
+   100                                  
+   101                                  ;Display numbersInput
+   102 00000045 48BF-                   mov qword rdi, stringFormat                     
+   102 00000047 [6500000000000000] 
+   103 0000004F 48BE-                   mov qword rsi, numbersInput              
+   103 00000051 [0000000000000000] 
+   104 00000059 B800000000              mov qword rax, 0
+   105 0000005E E8(00000000)            call printf
+   106                                  
+   107                                  ;=======================================START OF LOOP==============================================
+   108                                  startLoop:
+   109                                  ;Scanf function called to take user input.
+   110 00000063 48BF-                   mov qword rdi, stringFormat
+   110 00000065 [6500000000000000] 
+   111 0000006D 6A00                    push qword 0
+   112 0000006F 4889E6                  mov qword rsi, rsp                      ;Stack pointer points to where scanf outputs.
+   113 00000072 B800000000              mov qword rax, 0
+   114 00000077 E8(00000000)            call scanf
+   115                                  
+   116                                  ; Tests if Control + D is entered to finish inputing into array.
+   117 0000007C 4898                    cdqe
+   118 0000007E 4883F8FF                cmp rax, -1                          
+   119 00000082 7424                    je endLoop                              ;If control + D is entered, jump to end_of_loop.
+   120                                  
+   121                                  ;=======================================ASCII TO LONG==============================================
+   122                                  ; Converts string of characters (user input) into a long integer. 
+   123 00000084 B800000000              mov qword rax, 0
+   124 00000089 4889E7                  mov qword rdi, rsp
+   125 0000008C E8(00000000)            call atof                      
+   126 00000091 F2440F10E0              movsd qword xmm12, xmm0                 ;Saves output long integer from atolong in r12.
+   126          ******************       warning: register size specification ignored [-w+other]
+   127 00000096 4158                    pop r8                                  ;Pop off stack into any scratch register. 
+   128                                  
+   129                                  ;=======================================COPY INTO ARRAY============================================
+   130                                  ; Adds copy of long integer saved in r12 into array at index of counter (r13).
+   131 00000098 F2470F1124EF            movsd [r15 + 8 * r13], xmm12                ;Copies user input into array at index of r13.
+   132 0000009E 49FFC5                  inc r13                                 ;Increments counter r13 by 1.
+   133                                  
+   134                                  ;=======================================ARRAY CAPACITY TEST========================================
+   135                                  ; Tests to see if max array capacity has been reached.
+   136 000000A1 4D39F5                  cmp r13, r14                            ;Compares # of elements (r13) to capacity (r14).
+   137 000000A4 7404                    je exitProgram                          ;If # of elements equals capacity, exit loop.
+   138                                  
+   139                                  ; Restarts loop.
+   140 000000A6 EBBB                    jmp startLoop
+   141                                  
+   142                                  ;=======================================END OF LOOP================================================
+   143                                  endLoop:
+   144 000000A8 4158                    pop r8
+   145                                  
+   146                                  ;=======================================EXIT PROGRAM===============================================
+   147                                  exitProgram:
+   148                                  ; Restore all backed up registers to their original state.
+   149 000000AA 58                      pop rax                                 ;Remove extra push of -1 from stack.
+   150 000000AB 4C89E8                  mov qword rax, r13                      ;Copies # of elements in r13 to rax.
+   151 000000AE 5B                      pop rbx                                                     
+   152 000000AF 415F                    pop r15                                                     
+   153 000000B1 415E                    pop r14                                                      
+   154 000000B3 415D                    pop r13                                                      
+   155 000000B5 415C                    pop r12                                                      
+   156 000000B7 415B                    pop r11                                                     
+   157 000000B9 415A                    pop r10                                                     
+   158 000000BB 4159                    pop r9                                                      
+   159 000000BD 4158                    pop r8                                                      
+   160 000000BF 59                      pop rcx                                                     
+   161 000000C0 5A                      pop rdx                                                     
+   162 000000C1 5E                      pop rsi                                                     
+   163 000000C2 5F                      pop rdi                                                     
+   164 000000C3 5D                      pop rbp
+   165 000000C4 C3                      ret
